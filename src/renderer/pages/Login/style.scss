@@ -1,0 +1,56 @@
+.login-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+
+    header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100vw;
+        margin: 20px 0;
+
+        #minecraft-create-france-title {
+            width: 400px;
+        }
+
+        #create-france-logo,
+        *:first-child {
+            width: 100px;
+            height: 100px;
+            padding-right: 20px;
+            align-self: flex-start;
+        }
+    }
+
+    &__content {
+        flex-grow: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &__form {
+            backdrop-filter: blur(10px);
+            margin-bottom: 242px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--dark-gray);
+            border-radius: 20px;
+            padding: 20px 30px;
+            height: 200px;
+
+            > *:not(h1) {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+        }
+    }
+}

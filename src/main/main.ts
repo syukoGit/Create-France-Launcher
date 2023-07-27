@@ -28,25 +28,6 @@ if (process.env.NODE_ENV === 'production') {
     sourceMapSupport.install();
 }
 
-// const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
-
-// if (isDebug) {
-//     require('electron-debug')();
-// }
-
-// const installExtensions = async () => {
-//     const installer = require('electron-devtools-installer');
-//     const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-//     const extensions = ['REACT_DEVELOPER_TOOLS'];
-
-//     return installer
-//         .default(
-//             extensions.map((name) => installer[name]),
-//             forceDownload
-//         )
-//         .catch(console.log);
-// };
-
 const createWindow = async () => {
     const RESOURCES_PATH = app.isPackaged ? path.join(process.resourcesPath, 'assets') : path.join(__dirname, '../../assets');
 
@@ -57,7 +38,9 @@ const createWindow = async () => {
     mainWindow = new BrowserWindow({
         show: false,
         width: 1024,
-        height: 728,
+        height: 768,
+        minHeight: 768,
+        minWidth: 1024,
         icon: getAssetPath('icon.png'),
         webPreferences: {
             nodeIntegration: true,

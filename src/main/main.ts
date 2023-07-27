@@ -2,7 +2,6 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { Auth } from 'msmc';
 import { isIUser } from '../types/IUser';
@@ -41,6 +40,7 @@ const createWindow = async () => {
         height: 768,
         minHeight: 768,
         minWidth: 1024,
+        autoHideMenuBar: true,
         icon: getAssetPath('icon.png'),
         webPreferences: {
             nodeIntegration: true,
@@ -64,9 +64,6 @@ const createWindow = async () => {
     mainWindow.on('closed', () => {
         mainWindow = null;
     });
-
-    const menuBuilder = new MenuBuilder(mainWindow);
-    menuBuilder.buildMenu();
 
     // Open urls in the user's browser
     mainWindow.webContents.setWindowOpenHandler((edata) => {

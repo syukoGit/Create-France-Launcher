@@ -1,7 +1,7 @@
 import './style.scss';
 import SigninWithMicrosoft from 'renderer/components/SigninWithMicrosoft';
 import MinecraftCreateFrance from '../../../../assets/create-france/minecraft-create-france.png';
-import CreateFranceLogo from '../../../../assets/create-france/logo.png';
+import CreateFranceLogo from '../../../../assets/icon.svg';
 
 const Login = () => {
     return (

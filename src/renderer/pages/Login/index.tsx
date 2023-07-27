@@ -13,7 +13,7 @@ const Login = () => {
             </header>
             <div className='login-page__content'>
                 <div className='login-page__content__form'>
-                    <h1 className='login-page__content__form__title'>Log in</h1>
+                    <h1 className='login-page__content__form__title'>Se connecter</h1>
                     <div>
                         <SigninWithMicrosoft />
                     </div>

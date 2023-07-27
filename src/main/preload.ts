@@ -1,23 +1,26 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
+
+type IpcRendererKeys = 'login' | 'logout' | 'refresh';
+type StoreKeys = 'account-token' | 'account';
 
 const electronHandler = {
-  ipcRenderer: {
-    sendMessage(channel: string, ...args: unknown[]) {
-      ipcRenderer.send(channel, ...args);
+    ipcRenderer: {
+        sendMessage(channel: IpcRendererKeys, ...args: unknown[]) {
+            ipcRenderer.send(channel, ...args);
+        },
     },
-    on(channel: string, func: (...args: unknown[]) => void) {
-      const subscription = (_event: IpcRendererEvent, ...args: unknown[]) =>
-        func(...args);
-      ipcRenderer.on(channel, subscription);
 
-      return () => {
-        ipcRenderer.removeListener(channel, subscription);
-      };
+    store: {
+        get(key: StoreKeys) {
+            return ipcRenderer.sendSync('electron-store-get', key);
+        },
+        set(key: StoreKeys, ...val: any[]) {
+            ipcRenderer.send('electron-store-set', key, val);
+        },
+        delete(key: StoreKeys) {
+            ipcRenderer.send('electron-store-delete', key);
+        },
     },
-    once(channel: string, func: (...args: unknown[]) => void) {
-      ipcRenderer.once(channel, (_event, ...args) => func(...args));
-    },
-  },
 };
 
 contextBridge.exposeInMainWorld('electron', electronHandler);

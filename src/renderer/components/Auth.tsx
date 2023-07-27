@@ -13,12 +13,6 @@ const Auth = () => {
             return false;
         }
 
-        if (msToken.expires_in < Date.now()) {
-            console.log('account-token has expired');
-            window.electron.ipcRenderer.sendMessage('refresh');
-            return false;
-        }
-
         window.electron.ipcRenderer.sendMessage('refresh');
         console.log('account-token is valid');
 

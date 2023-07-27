@@ -27,6 +27,8 @@ if (process.env.NODE_ENV === 'production') {
     sourceMapSupport.install();
 }
 
+const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+
 const createWindow = async () => {
     const RESOURCES_PATH = app.isPackaged ? path.join(process.resourcesPath, 'assets') : path.join(__dirname, '../../assets');
 
@@ -40,7 +42,7 @@ const createWindow = async () => {
         height: 768,
         minHeight: 768,
         minWidth: 1024,
-        autoHideMenuBar: true,
+        autoHideMenuBar: !isDebug,
         icon: getAssetPath('icon.png'),
         webPreferences: {
             nodeIntegration: true,

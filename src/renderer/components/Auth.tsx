@@ -14,7 +14,6 @@ const Auth = () => {
         }
 
         window.electron.ipcRenderer.sendMessage('refresh');
-        console.log('account-token is valid');
 
         return true;
     };

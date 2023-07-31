@@ -9,6 +9,8 @@ import { isMsAuthToken } from '../types/MsAuthToken';
 import { MSAuthToken } from 'msmc/types/auth/auth';
 import { GmllUser } from 'msmc/types/assets';
 import { Instance, init, config } from 'gmll';
+import { Dir } from 'gmll/objects/files';
+import { copy } from 'fs-extra';
 
 class AppUpdater {
     constructor() {
@@ -169,15 +171,44 @@ ipcMain.on('ms-account-refresh', async (_) => {
 });
 
 ipcMain.on('download-modpack', async () => {
+    const minecraftDir = new Dir('.minecraft');
+
     await init();
 
+    let instance;
+
     try {
-        var int = new Instance({ version: '1.19.2', name: 'create_france' });
-        await int.import('https://www.dropbox.com/s/rgu4rwjgw42j4jz/Createfrance%201.19.2%20fabric-0.10.zip?dl=1', 'curseforge');
-        int.save();
+        instance = new Instance({ version: 'fabric-loader-0.14.21-1.19.2', name: 'create_france' });
+        await instance.install();
+        instance.save();
     } catch (e) {
         console.log('error: ' + JSON.stringify(e));
+        return;
     }
+
+    const modpackZip = minecraftDir.getFile('modpack.zip');
+
+    try {
+        await modpackZip.download('https://www.dropbox.com/s/exvbl1hwhts749w/createfrance.zip?dl=1');
+
+        console.log('modpack downloaded');
+    } catch (e) {
+        console.log('error: ' + JSON.stringify(e));
+        return;
+    }
+
+    const modpackExtractedFolder = minecraftDir.getDir('modpack-extracted').mkdir();
+    await modpackZip.unzip(modpackExtractedFolder);
+
+    const intModsFolderPath = instance.getDir().getDir('mods').mkdir().path.join('\\');
+    const intConfigFolderPath = instance.getDir().getDir('config').mkdir().path.join('\\');
+    const intKubejsFolderPath = instance.getDir().getDir('kubejs').mkdir().path.join('\\');
+
+    await copy(modpackExtractedFolder.getDir('mods').path.join('\\'), intModsFolderPath);
+    await copy(modpackExtractedFolder.getDir('config').path.join('\\'), intConfigFolderPath);
+    await copy(modpackExtractedFolder.getDir('kubejs').path.join('\\'), intKubejsFolderPath);
+
+    modpackExtractedFolder.rm();
 
     console.log('done');
 });
@@ -218,16 +249,6 @@ ipcMain.on('play-minecraft', async () => {
     } catch (e) {
         console.log('error: ' + JSON.stringify(e));
     }
-
-    // var int = new Instance({ version: '1.19.2', name: 'Create France' });
-    // await int.wrap(
-    //     /**The URL link to the base folder of this modpacks final resting spot*/
-    //     // 'file://C:/Users/Antonin/Downloads/test',
-    //     'https://www.hanro50.net.za/test',
-    //     'modpack',
-    //     /**The name of your pack.*/
-    //     'Create France'
-    // );
 });
 
 ipcMain.on('electron-store-get', async (event, key) => {

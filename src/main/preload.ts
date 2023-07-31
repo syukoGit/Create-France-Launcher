@@ -1,12 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-type IpcRendererKeys = 'ms-account-login' | 'account-logout' | 'ms-account-refresh' | 'play-minecraft' | 'download-modpack';
+type IpcMainChannels = 'ms-account-login' | 'account-logout' | 'ms-account-refresh' | 'play-minecraft' | 'download-modpack';
 type StoreKeys = 'account-token' | 'account';
 
 const electronHandler = {
     ipcRenderer: {
-        sendMessage(channel: IpcRendererKeys, ...args: unknown[]) {
-            ipcRenderer.send(channel, ...args);
+        sendMessage(channel: IpcMainChannels, ...args: unknown[]) {
+            ipcRenderer.sendSync(channel, ...args);
         },
     },
 

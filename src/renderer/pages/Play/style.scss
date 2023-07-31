@@ -1,0 +1,19 @@
+.play-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+
+    > header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin: 20px 0;
+
+        > #minecraft-create-france-title {
+            width: 300px;
+        }
+    }
+}

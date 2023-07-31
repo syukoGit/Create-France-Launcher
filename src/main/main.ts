@@ -1,14 +1,14 @@
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { resolveHtmlPath } from './util';
-import { Auth } from 'msmc';
-import { isIUser } from '../types/IUser';
+import { Auth, Minecraft } from 'msmc';
 import Store from 'electron-store';
 import { isMsAuthToken } from '../types/MsAuthToken';
 import { MSAuthToken } from 'msmc/types/auth/auth';
-import { IUser } from 'minecraft-launcher-core';
+import { GmllUser } from 'msmc/types/assets';
+import { Instance, init, config } from 'gmll';
 
 class AppUpdater {
     constructor() {
@@ -22,12 +22,22 @@ let mainWindow: BrowserWindow | null = null;
 
 const store = new Store();
 
+config.getEventListener().on('download.start', () => console.log('download start'));
+config.getEventListener().on('download.setup', (cores) => console.log(`download setup: ${cores}`));
+config.getEventListener().on('download.progress', (key, index, total, left) => console.log(`download progress: ${key} ${index}/${total} ${left}`));
+config.getEventListener().on('download.fail', (key, type, err) => console.log(`download fail: ${key} ${type} ${err}`));
+config.getEventListener().on('download.done', () => console.log('download done'));
+config.getEventListener().on('parser.start', (e) => console.log('parser start', e));
+config.getEventListener().on('parser.progress', (key, index, total, left) => console.log(`parser progress: ${key} ${index}/${total} ${left}`));
+config.getEventListener().on('parser.fail', (key, type, err) => console.log(`parser fail: ${key} ${type} ${err}`));
+config.getEventListener().on('parser.done', () => console.log('parser done'));
+
 if (process.env.NODE_ENV === 'production') {
     const sourceMapSupport = require('source-map-support');
     sourceMapSupport.install();
 }
 
-const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+const isDev = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
 const createWindow = async () => {
     const RESOURCES_PATH = app.isPackaged ? path.join(process.resourcesPath, 'assets') : path.join(__dirname, '../../assets');
@@ -42,10 +52,10 @@ const createWindow = async () => {
         height: 768,
         minHeight: 768,
         minWidth: 1024,
-        autoHideMenuBar: !isDebug,
+        autoHideMenuBar: !isDev,
         icon: getAssetPath('icon.png'),
         webPreferences: {
-            nodeIntegration: true,
+            nodeIntegration: false,
             preload: app.isPackaged ? path.join(__dirname, 'preload.js') : path.join(__dirname, '../../.erb/dll/preload.js'),
         },
     });
@@ -96,7 +106,7 @@ app.whenReady()
     })
     .catch(console.log);
 
-const storeAccountInfo = (token: MSAuthToken, account: IUser) => {
+const storeAccountInfo = (token: MSAuthToken, account: GmllUser) => {
     store.set('account-token', token);
     store.set('account', account);
 };
@@ -116,28 +126,27 @@ const removeAccountInfo = () => {
     store.delete('account');
 };
 
-ipcMain.on('login', async () => {
-    const auth = new Auth('select_account');
-    const xbox = await auth.launch('electron');
-    const mc = await xbox.getMinecraft();
-    const account = mc.mclc();
+ipcMain.on('ms-account-login', async () => {
+    try {
+        const auth = new Auth('select_account');
+        const xbox = await auth.launch('electron');
+        const mc = await xbox.getMinecraft();
+        const account = mc.gmll();
 
-    if (!isIUser(account)) {
+        storeAccountInfo(xbox.msToken, account);
+
+        mainWindow?.loadURL(resolveHtmlPath('index.html'));
+    } catch (_) {
         removeAccountInfo();
-        return;
     }
-
-    storeAccountInfo(xbox.msToken, account);
-
-    mainWindow?.loadURL(resolveHtmlPath('index.html'));
 });
 
-ipcMain.on('logout', async () => {
+ipcMain.on('account-logout', async () => {
     removeAccountInfo();
     mainWindow?.loadURL(resolveHtmlPath('index.html'));
 });
 
-ipcMain.on('refresh', async (_) => {
+ipcMain.on('ms-account-refresh', async (_) => {
     const msToken = loadAccountToken();
 
     if (!isMsAuthToken(msToken)) {
@@ -146,18 +155,79 @@ ipcMain.on('refresh', async (_) => {
         return;
     }
 
-    const auth = new Auth();
-    const xbox = await auth.refresh(msToken);
-    const mc = await xbox.getMinecraft();
-    const account = mc.mclc();
+    try {
+        const auth = new Auth();
+        const xbox = await auth.refresh(msToken);
+        const mc = await xbox.getMinecraft();
+        const account = mc.gmll();
 
-    if (!isIUser(account)) {
+        storeAccountInfo(xbox.msToken, account);
+    } catch (_) {
+        removeAccountInfo();
+        mainWindow?.loadURL(resolveHtmlPath('index.html'));
+    }
+});
+
+ipcMain.on('download-modpack', async () => {
+    await init();
+
+    try {
+        var int = new Instance({ version: '1.19.2', name: 'create_france' });
+        await int.import('https://www.dropbox.com/s/rgu4rwjgw42j4jz/Createfrance%201.19.2%20fabric-0.10.zip?dl=1', 'curseforge');
+        int.save();
+    } catch (e) {
+        console.log('error: ' + JSON.stringify(e));
+    }
+
+    console.log('done');
+});
+
+ipcMain.on('play-minecraft', async () => {
+    const msToken = loadAccountToken();
+
+    if (!isMsAuthToken(msToken)) {
         removeAccountInfo();
         mainWindow?.loadURL(resolveHtmlPath('index.html'));
         return;
     }
 
-    storeAccountInfo(xbox.msToken, account);
+    await init();
+
+    let mc: Minecraft;
+
+    try {
+        const auth = new Auth();
+        const xbox = await auth.refresh(msToken);
+        mc = await xbox.getMinecraft();
+    } catch (e) {
+        console.log('error: ' + JSON.stringify(e));
+        removeAccountInfo();
+        mainWindow?.loadURL(resolveHtmlPath('index.html'));
+        return;
+    }
+
+    const instances = Instance.getProfiles();
+
+    instances.forEach((element) => {
+        console.log(element.name + ' ' + element.version);
+    });
+
+    try {
+        var int = Instance.get('create_france');
+        int.launch(mc.gmll());
+    } catch (e) {
+        console.log('error: ' + JSON.stringify(e));
+    }
+
+    // var int = new Instance({ version: '1.19.2', name: 'Create France' });
+    // await int.wrap(
+    //     /**The URL link to the base folder of this modpacks final resting spot*/
+    //     // 'file://C:/Users/Antonin/Downloads/test',
+    //     'https://www.hanro50.net.za/test',
+    //     'modpack',
+    //     /**The name of your pack.*/
+    //     'Create France'
+    // );
 });
 
 ipcMain.on('electron-store-get', async (event, key) => {

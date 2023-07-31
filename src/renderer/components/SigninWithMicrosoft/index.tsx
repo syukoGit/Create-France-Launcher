@@ -2,7 +2,7 @@ import './style.scss';
 
 const SigninWithMicrosoft = () => {
     const handleClick = () => {
-        window.electron.ipcRenderer.sendMessage('login');
+        window.electron.ipcRenderer.sendMessage('ms-account-login');
     };
 
     return <button className='signin-with-ms' onClick={handleClick}></button>;

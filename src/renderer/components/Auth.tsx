@@ -1,5 +1,4 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { isIUser } from 'types/IUser';
 import { isMsAuthToken } from 'types/MsAuthToken';
 
 const Auth = () => {
@@ -13,7 +12,7 @@ const Auth = () => {
             return false;
         }
 
-        window.electron.ipcRenderer.sendMessage('refresh');
+        window.electron.ipcRenderer.sendMessage('ms-account-refresh');
 
         return true;
     };

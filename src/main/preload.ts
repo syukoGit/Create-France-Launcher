@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-type IpcRendererKeys = 'login' | 'logout' | 'refresh';
+type IpcRendererKeys = 'ms-account-login' | 'account-logout' | 'ms-account-refresh' | 'play-minecraft' | 'download-modpack';
 type StoreKeys = 'account-token' | 'account';
 
 const electronHandler = {

@@ -13,11 +13,17 @@ const Launcher = () => {
         headUrl = `https://mc-heads.net/avatar/${username}/64`;
     }
 
+    const handleLogout = () => {
+        window.electron.ipcRenderer.sendMessage('account-logout');
+    };
+
     return (
         <div className='launcher'>
             <section className='launcher__sidebar'>
                 <img id='minecraft-player-head' src={headUrl} />
                 <p>{username}</p>
+                <hr className='horizontal-divider'/>
+                <p className='font-14 clickable' onClick={handleLogout}>Se déconnecter</p>
             </section>
             <section className='launcher__main'>
                 <Play />

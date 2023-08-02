@@ -13,10 +13,6 @@ const Play = () => {
         headUrl = `https://mc-heads.net/avatar/${username}/64`;
     }
 
-    const handleLogout = () => {
-        window.electron.ipcRenderer.sendMessage('account-logout');
-    };
-
     const handleDownload = () => {
         window.electron.ipcRenderer.sendMessage('download-modpack');
     };
@@ -30,9 +26,9 @@ const Play = () => {
             <header>
                 <img id='minecraft-create-france-title' src={MinecraftCreateFrance} alt='Minecraft Create France' />
             </header>
-            <button onClick={handleLogout}>Logout</button>
-            <button onClick={handleDownload}>Télécharger</button>
-            <button onClick={handlePlay}>Jouer</button>
+            <div className='play-page__content'>
+                <button onClick={handlePlay}>Jouer</button>
+            </div>
         </div>
     );
 };

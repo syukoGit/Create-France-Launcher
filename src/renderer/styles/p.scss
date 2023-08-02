@@ -1,0 +1,13 @@
+p {
+    &.font-14 {
+        font-size: 14px;
+    }
+
+    &.clickable {
+        cursor: pointer;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}

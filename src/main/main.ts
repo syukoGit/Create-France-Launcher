@@ -3,14 +3,9 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { resolveHtmlPath } from './util';
-import { Auth, Minecraft } from 'msmc';
-import Store from 'electron-store';
-import { isMsAuthToken } from '../types/MsAuthToken';
-import { MSAuthToken } from 'msmc/types/auth/auth';
-import { GmllUser } from 'msmc/types/assets';
-import { Instance, init, config } from 'gmll';
-import { Dir } from 'gmll/objects/files';
-import { copy } from 'fs-extra';
+import { config } from 'gmll';
+import AppStore from './electronStore';
+import { setIPCMainListeners } from './listener';
 
 class AppUpdater {
     constructor() {
@@ -22,7 +17,7 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-const store = new Store();
+const store = new AppStore();
 
 config.getEventListener().on('download.start', () => console.log('download start'));
 config.getEventListener().on('download.setup', (cores) => console.log(`download setup: ${cores}`));
@@ -50,10 +45,10 @@ const createWindow = async () => {
 
     mainWindow = new BrowserWindow({
         show: false,
-        width: 1024,
-        height: 768,
-        minHeight: 768,
-        minWidth: 1024,
+        width: 1320,
+        height: 740,
+        minHeight: 740,
+        minWidth: 1320,
         autoHideMenuBar: !isDev,
         icon: getAssetPath('icon.png'),
         webPreferences: {
@@ -108,157 +103,4 @@ app.whenReady()
     })
     .catch(console.log);
 
-const storeAccountInfo = (token: MSAuthToken, account: GmllUser) => {
-    store.set('account-token', token);
-    store.set('account', account);
-};
-
-const loadAccountToken = (): MSAuthToken | undefined => {
-    const msToken = store.get('account-token');
-
-    if (!isMsAuthToken(msToken)) {
-        return undefined;
-    }
-
-    return msToken;
-};
-
-const removeAccountInfo = () => {
-    store.delete('account-token');
-    store.delete('account');
-};
-
-ipcMain.on('ms-account-login', async () => {
-    try {
-        const auth = new Auth('select_account');
-        const xbox = await auth.launch('electron');
-        const mc = await xbox.getMinecraft();
-        const account = mc.gmll();
-
-        storeAccountInfo(xbox.msToken, account);
-
-        mainWindow?.loadURL(resolveHtmlPath('index.html'));
-    } catch (_) {
-        removeAccountInfo();
-    }
-});
-
-ipcMain.on('account-logout', async () => {
-    removeAccountInfo();
-    mainWindow?.loadURL(resolveHtmlPath('index.html'));
-});
-
-ipcMain.on('ms-account-refresh', async (_) => {
-    const msToken = loadAccountToken();
-
-    if (!isMsAuthToken(msToken)) {
-        removeAccountInfo();
-        mainWindow?.loadURL(resolveHtmlPath('index.html'));
-        return;
-    }
-
-    try {
-        const auth = new Auth();
-        const xbox = await auth.refresh(msToken);
-        const mc = await xbox.getMinecraft();
-        const account = mc.gmll();
-
-        storeAccountInfo(xbox.msToken, account);
-    } catch (_) {
-        removeAccountInfo();
-        mainWindow?.loadURL(resolveHtmlPath('index.html'));
-    }
-});
-
-ipcMain.on('download-modpack', async () => {
-    const minecraftDir = new Dir('.minecraft');
-
-    await init();
-
-    let instance;
-
-    try {
-        instance = new Instance({ version: 'fabric-loader-0.14.21-1.19.2', name: 'create_france' });
-        await instance.install();
-        instance.save();
-    } catch (e) {
-        console.log('error: ' + JSON.stringify(e));
-        return;
-    }
-
-    const modpackZip = minecraftDir.getFile('modpack.zip');
-
-    try {
-        await modpackZip.download('https://www.dropbox.com/s/exvbl1hwhts749w/createfrance.zip?dl=1');
-
-        console.log('modpack downloaded');
-    } catch (e) {
-        console.log('error: ' + JSON.stringify(e));
-        return;
-    }
-
-    const modpackExtractedFolder = minecraftDir.getDir('modpack-extracted').mkdir();
-    await modpackZip.unzip(modpackExtractedFolder);
-
-    const intModsFolderPath = instance.getDir().getDir('mods').mkdir().path.join('\\');
-    const intConfigFolderPath = instance.getDir().getDir('config').mkdir().path.join('\\');
-    const intKubejsFolderPath = instance.getDir().getDir('kubejs').mkdir().path.join('\\');
-
-    await copy(modpackExtractedFolder.getDir('mods').path.join('\\'), intModsFolderPath);
-    await copy(modpackExtractedFolder.getDir('config').path.join('\\'), intConfigFolderPath);
-    await copy(modpackExtractedFolder.getDir('kubejs').path.join('\\'), intKubejsFolderPath);
-
-    modpackExtractedFolder.rm();
-
-    console.log('done');
-});
-
-ipcMain.on('play-minecraft', async () => {
-    const msToken = loadAccountToken();
-
-    if (!isMsAuthToken(msToken)) {
-        removeAccountInfo();
-        mainWindow?.loadURL(resolveHtmlPath('index.html'));
-        return;
-    }
-
-    await init();
-
-    let mc: Minecraft;
-
-    try {
-        const auth = new Auth();
-        const xbox = await auth.refresh(msToken);
-        mc = await xbox.getMinecraft();
-    } catch (e) {
-        console.log('error: ' + JSON.stringify(e));
-        removeAccountInfo();
-        mainWindow?.loadURL(resolveHtmlPath('index.html'));
-        return;
-    }
-
-    const instances = Instance.getProfiles();
-
-    instances.forEach((element) => {
-        console.log(element.name + ' ' + element.version);
-    });
-
-    try {
-        var int = Instance.get('create_france');
-        int.launch(mc.gmll());
-    } catch (e) {
-        console.log('error: ' + JSON.stringify(e));
-    }
-});
-
-ipcMain.on('electron-store-get', async (event, key) => {
-    event.returnValue = store.get(key);
-});
-
-ipcMain.on('electron-store-set', async (_, key, val) => {
-    store.set(key, val);
-});
-
-ipcMain.on('electron-strone-reset', async (_, key) => {
-    store.delete(key);
-});
+setIPCMainListeners(ipcMain, store);

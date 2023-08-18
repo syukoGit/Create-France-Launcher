@@ -1,6 +1,8 @@
 import { isGmllUser } from 'types/GmllUser';
 import MinecraftCreateFrance from '../../../../assets/create-france/minecraft-create-france.png';
 import './style.scss';
+import playMinecraft from './playMinecraft';
+import downloadModpack from './downloadModpack';
 
 const Play = () => {
     const account = window.electron.store.get('account');
@@ -13,12 +15,8 @@ const Play = () => {
         headUrl = `https://mc-heads.net/avatar/${username}/64`;
     }
 
-    const handleDownload = () => {
-        window.electron.ipcRenderer.sendMessage('download-modpack');
-    };
-
     const handlePlay = () => {
-        window.electron.ipcRenderer.sendMessage('play-minecraft');
+        playMinecraft();
     };
 
     return (
@@ -27,7 +25,9 @@ const Play = () => {
                 <img id='minecraft-create-france-title' src={MinecraftCreateFrance} alt='Minecraft Create France' />
             </header>
             <div className='play-page__content'>
-                <button onClick={handlePlay}>Jouer</button>
+                <button className='primary' onClick={handlePlay}>
+                    Jouer
+                </button>
             </div>
         </div>
     );

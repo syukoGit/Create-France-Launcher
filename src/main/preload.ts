@@ -1,12 +1,32 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { IpcRenderer, IpcRendererEvent, contextBridge, ipcRenderer } from 'electron';
 
-type IpcMainChannels = 'ms-account-login' | 'account-logout' | 'ms-account-refresh' | 'play-minecraft' | 'download-modpack';
 type StoreKeys = 'account-token' | 'account';
+
+type IpcMainChannels = 'ms-account-login' | 'account-logout' | 'ms-account-refresh' | 'play-minecraft' | 'install-modpack' | 'is-modpack-installed';
+
+type IpcRendererChannels = 'navigate' | 'play-minecraft-reply' | IpcRendererChannelsAccount | IpcRendererChannelsModpack;
+
+type IpcRendererChannelsAccount = 'logout-reply' | 'login-reply' | 'ms-account-refresh-reply';
+type IpcRendererChannelsModpack =
+    | 'download-fabric-reply'
+    | 'download-modpack-reply'
+    | 'install-modpack-reply'
+    | 'extract-modpack-reply'
+    | 'is-modpack-installed-reply';
 
 const electronHandler = {
     ipcRenderer: {
         sendMessage(channel: IpcMainChannels, ...args: unknown[]) {
-            ipcRenderer.sendSync(channel, ...args);
+            ipcRenderer.send(channel, ...args);
+        },
+        on(channel: IpcRendererChannels, listener: (event: IpcRendererEvent, ...args: unknown[]) => void) {
+            ipcRenderer.on(channel, listener);
+        },
+        once(channel: IpcRendererChannels, listener: (event: IpcRendererEvent, ...args: unknown[]) => void) {
+            ipcRenderer.once(channel, listener);
+        },
+        removeAllListeners(channel: IpcRendererChannels) {
+            ipcRenderer.removeAllListeners(channel);
         },
     },
 

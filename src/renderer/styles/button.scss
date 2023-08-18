@@ -4,7 +4,6 @@ button {
     padding: 10px;
     font-size: 16px;
     transition: opacity 0.2s ease-in-out;
-    background-color: rgb(91, 47, 66);
     border: 2px solid rgb(44, 22, 32);
     opacity: 0.7;
     color: white;
@@ -23,7 +22,7 @@ button {
     }
 
     &.primary {
-        background-color: var(--dark-gray);
+        background-color: rgb(91, 47, 66);
         color: var(--white);
     }
 }

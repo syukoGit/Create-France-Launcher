@@ -1,8 +1,24 @@
 import { isGmllUser } from 'types/GmllUser';
 import './style.scss';
 import Play from '../Play';
+import { toast } from 'react-toastify';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Launcher = () => {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        window.electron.ipcRenderer.on('navigate', () => {
+            navigate('/');
+        });
+
+        window.electron.ipcRenderer.once('logout-reply', () => {
+            toast.error('Au revoir !');
+            navigate('/');
+        });
+    }, []);
+
     const account = window.electron.store.get('account');
 
     let headUrl = 'https://mc-heads.net/avatar/MHF_Steve/64';
@@ -22,8 +38,10 @@ const Launcher = () => {
             <section className='launcher__sidebar'>
                 <img id='minecraft-player-head' src={headUrl} />
                 <p>{username}</p>
-                <hr className='horizontal-divider'/>
-                <p className='font-14 clickable' onClick={handleLogout}>Se déconnecter</p>
+                <hr className='horizontal-divider' />
+                <p className='font-14 clickable' onClick={handleLogout}>
+                    Se déconnecter
+                </p>
             </section>
             <section className='launcher__main'>
                 <Play />

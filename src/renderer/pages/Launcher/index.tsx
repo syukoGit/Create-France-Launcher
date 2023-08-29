@@ -3,7 +3,8 @@ import './style.scss';
 import Play from '../Play';
 import { toast } from 'react-toastify';
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Route, Routes, useNavigate } from 'react-router-dom';
+import Settings from '../Settings';
 
 const Launcher = () => {
     const navigate = useNavigate();
@@ -42,9 +43,14 @@ const Launcher = () => {
                 <p className='font-14 clickable' onClick={handleLogout}>
                     Se déconnecter
                 </p>
+                <div className='launcher__sidebar__end'></div>
+                <button className='image-button launcher__sidebar__settings-btn' onClick={() => navigate('/settings')} />
             </section>
             <section className='launcher__main'>
-                <Play />
+                <Routes>
+                    <Route path='/' element={<Play />} />
+                    <Route path='/settings' element={<Settings />} />
+                </Routes>
             </section>
         </div>
     );

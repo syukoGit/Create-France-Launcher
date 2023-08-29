@@ -2,7 +2,6 @@ import { isGmllUser } from 'types/GmllUser';
 import MinecraftCreateFrance from '../../../../assets/create-france/minecraft-create-france.png';
 import './style.scss';
 import playMinecraft from './playMinecraft';
-import downloadModpack from './downloadModpack';
 
 const Play = () => {
     const account = window.electron.store.get('account');

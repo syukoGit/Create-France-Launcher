@@ -83,6 +83,7 @@
         "gmll": "^3.2.1",
         "msmc": "^4.1.0",
         "react": "^18.2.0",
+        "react-bootstrap-icons": "^1.10.3",
         "react-dom": "^18.2.0",
         "react-router-dom": "^6.11.2",
         "react-toastify": "^9.1.3"
@@ -155,6 +156,9 @@
         "webpack-dev-server": "^4.15.0",
         "webpack-merge": "^5.9.0"
     },
+    "extraFiles": [
+        "assets"
+    ],
     "build": {
         "productName": "Create France Launcher",
         "appId": "fr.syuko.create-france-launcher",

@@ -24,8 +24,9 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
             e.reply('login-reply', true, account.profile.name);
 
             return;
-        } catch (_) {
+        } catch (err) {
             store.removeAccountInfo();
+            console.log(JSON.stringify(err));
         }
 
         e.reply('login-reply', false, '');
@@ -264,5 +265,17 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
     // Delete Electron store value
     ipcMain.on('electron-strone-reset', async (_, key) => {
         store.delete(key);
+    });
+}
+export function setIPCMainHandlers(ipcMain: IpcMain) {
+    // Get Minecraft instance
+    ipcMain.handle('get-minecraft-instance', async (_) => {
+        await init();
+
+        if (!Instance.getProfiles().has('create_france')) {
+            return null;
+        }
+
+        return JSON.stringify(Instance.get('create_france'));
     });
 }

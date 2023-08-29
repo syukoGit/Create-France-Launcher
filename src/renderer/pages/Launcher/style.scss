@@ -10,17 +10,42 @@
         justify-content: flex-start;
         align-items: center;
         padding: 20px;
-        height: 100%;
         min-width: 120px;
         backdrop-filter: blur(10px);
         border-right: 3px solid var(--dark-gray);
 
-        > #minecraft-player-head {
+        >#minecraft-player-head {
             height: 64px;
             width: 64px;
             padding: 3px;
             border: 3px solid var(--white);
             border-radius: 10%;
+        }
+
+        &__settings-btn {
+            height: 64px;
+            width: 64px;
+            margin-top: auto;
+            overflow: hidden;
+            background-image: url('../../../../assets/extra/cogwheel_with_border.png');
+            background-size: auto 90%;
+            background-repeat: no-repeat;
+            background-position: center;
+            transform: rotate(45deg);
+
+            &:hover {
+                animation: infinite 2s linear rotate;
+
+                @keyframes rotate {
+                    0% {
+                        transform: rotate(45deg);
+                    }
+
+                    100% {
+                        transform: rotate(405deg);
+                    }
+                }
+            }
         }
     }
 

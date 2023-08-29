@@ -5,7 +5,7 @@ import log from 'electron-log';
 import { resolveHtmlPath } from './util';
 import { config } from 'gmll';
 import AppStore from './electronStore';
-import { setIPCMainListeners } from './listener';
+import { setIPCMainHandlers, setIPCMainListeners } from './listener';
 
 class AppUpdater {
     constructor() {
@@ -45,10 +45,10 @@ const createWindow = async () => {
 
     mainWindow = new BrowserWindow({
         show: false,
-        width: 1320,
-        height: 740,
-        minHeight: 740,
-        minWidth: 1320,
+        width: 1250,
+        height: 720,
+        minHeight: 720,
+        minWidth: 1250,
         autoHideMenuBar: !isDev,
         icon: getAssetPath('icon.png'),
         webPreferences: {
@@ -104,3 +104,4 @@ app.whenReady()
     .catch(console.log);
 
 setIPCMainListeners(ipcMain, store);
+setIPCMainHandlers(ipcMain);

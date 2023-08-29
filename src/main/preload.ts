@@ -1,6 +1,6 @@
 import { IpcRenderer, IpcRendererEvent, contextBridge, ipcRenderer } from 'electron';
 
-type StoreKeys = 'account-token' | 'account';
+type StoreKeys = 'account-token' | 'account' | 'launch-resolution';
 
 type IpcMainChannels = 'ms-account-login' | 'account-logout' | 'ms-account-refresh' | 'play-minecraft' | 'install-modpack' | 'is-modpack-installed';
 
@@ -14,10 +14,15 @@ type IpcRendererChannelsModpack =
     | 'extract-modpack-reply'
     | 'is-modpack-installed-reply';
 
+type IpcRendererChannelsInvoke = 'get-minecraft-instance';
+
 const electronHandler = {
     ipcRenderer: {
         sendMessage(channel: IpcMainChannels, ...args: unknown[]) {
             ipcRenderer.send(channel, ...args);
+        },
+        invoke(channel: IpcRendererChannelsInvoke, ...args: unknown[]): Promise<any> {
+            return ipcRenderer.invoke(channel, ...args);
         },
         on(channel: IpcRendererChannels, listener: (event: IpcRendererEvent, ...args: unknown[]) => void) {
             ipcRenderer.on(channel, listener);

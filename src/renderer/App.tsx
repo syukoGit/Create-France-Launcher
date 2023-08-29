@@ -15,7 +15,7 @@ export default function App() {
                 <Routes>
                     <Route path='/login' element={<Login />} />
                     <Route element={<Auth />}>
-                        <Route path='/' element={<Launcher />} />
+                        <Route path='/*' element={<Launcher />} />
                     </Route>
                 </Routes>
             </Router>

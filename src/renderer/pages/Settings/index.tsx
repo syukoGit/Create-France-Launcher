@@ -4,7 +4,7 @@ import { CaretLeftFill, TvFill } from 'react-bootstrap-icons';
 import { Instance } from 'gmll';
 import Loader from 'renderer/components/Loader';
 import { useEffect, useState } from 'react';
-import { get } from 'http';
+import InstallModPack from 'renderer/components/InstallModPack';
 
 const Settings = () => {
     const [resolution, setResolution] = useState({ width: 720, height: 480 });
@@ -55,7 +55,7 @@ const Settings = () => {
                 <div className='spacer' />
             </header>
             {mcInstance === undefined && <Loader />}
-            {mcInstance === null && <p>Le modpack n'est pas encore installé !</p>}
+            {mcInstance === null && <InstallModPack afterDownload={() => navigate('/settings')} />}
             {mcInstance && (
                 <section className='settings__resolution'>
                     <p>Résolution</p>

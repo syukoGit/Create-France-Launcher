@@ -195,17 +195,6 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         }
     });
 
-    // Check if modpack is installed
-    ipcMain.on('is-modpack-installed', async (e) => {
-        await init();
-
-        if (Instance.getProfiles().has('create_france')) {
-            e.reply('is-modpack-installed-reply', 'true');
-        } else {
-            e.reply('is-modpack-installed-reply', 'false');
-        }
-    });
-
     // Play Minecraft
     // Used in src\renderer\pages\Play
     ipcMain.on('play-minecraft', async (e) => {
@@ -277,5 +266,15 @@ export function setIPCMainHandlers(ipcMain: IpcMain) {
         }
 
         return JSON.stringify(Instance.get('create_france'));
+    });
+
+    ipcMain.handle('is-modpack-installed', async (_) => {
+        await init();
+
+        if (Instance.getProfiles().has('create_france')) {
+            return true;
+        } else {
+            return false;
+        }
     });
 }

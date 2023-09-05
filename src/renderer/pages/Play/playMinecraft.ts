@@ -1,5 +1,5 @@
 import { Id, toast } from 'react-toastify';
-import downloadModpack from './downloadModpack';
+import downloadModpack from '../../utils/downloadModpack';
 
 const playMinecraft = () => {
     window.electron.ipcRenderer.removeAllListeners('play-minecraft-reply');

@@ -1,0 +1,15 @@
+svg.icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    >* {
+        height: 100%;
+        width: 100%;
+    }
+
+    &--20px {
+        height: 20px;
+        width: 20px;
+    }
+}

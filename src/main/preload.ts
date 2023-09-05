@@ -2,7 +2,7 @@ import { IpcRenderer, IpcRendererEvent, contextBridge, ipcRenderer } from 'elect
 
 type StoreKeys = 'account-token' | 'account' | 'launch-resolution';
 
-type IpcMainChannels = 'ms-account-login' | 'account-logout' | 'ms-account-refresh' | 'play-minecraft' | 'install-modpack' | 'is-modpack-installed';
+type IpcMainChannels = 'ms-account-login' | 'account-logout' | 'ms-account-refresh' | 'play-minecraft' | 'install-modpack';
 
 type IpcRendererChannels = 'navigate' | 'play-minecraft-reply' | IpcRendererChannelsAccount | IpcRendererChannelsModpack;
 
@@ -14,7 +14,7 @@ type IpcRendererChannelsModpack =
     | 'extract-modpack-reply'
     | 'is-modpack-installed-reply';
 
-type IpcRendererChannelsInvoke = 'get-minecraft-instance';
+type IpcRendererChannelsInvoke = 'get-minecraft-instance' | 'is-modpack-installed';
 
 const electronHandler = {
     ipcRenderer: {

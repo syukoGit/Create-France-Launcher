@@ -1,6 +1,6 @@
 import { IpcRenderer, IpcRendererEvent, contextBridge, ipcRenderer } from 'electron';
 
-type StoreKeys = 'account-token' | 'account' | 'launch-resolution';
+type StoreKeys = 'account-token' | 'account' | 'settings';
 
 type IpcMainChannels = 'ms-account-login' | 'account-logout' | 'ms-account-refresh' | 'play-minecraft' | 'install-modpack';
 
@@ -8,13 +8,14 @@ type IpcRendererChannels = 'navigate' | 'play-minecraft-reply' | IpcRendererChan
 
 type IpcRendererChannelsAccount = 'logout-reply' | 'login-reply' | 'ms-account-refresh-reply';
 type IpcRendererChannelsModpack =
+    | 'modpack-installation'
     | 'download-fabric-reply'
     | 'download-modpack-reply'
     | 'install-modpack-reply'
     | 'extract-modpack-reply'
     | 'is-modpack-installed-reply';
 
-type IpcRendererChannelsInvoke = 'get-minecraft-instance' | 'is-modpack-installed';
+type IpcRendererChannelsInvoke = 'get-minecraft-instance' | 'delete-minecraft-instance' | 'save-minecraft-instance' | 'test';
 
 const electronHandler = {
     ipcRenderer: {
@@ -39,7 +40,7 @@ const electronHandler = {
         get(key: StoreKeys) {
             return ipcRenderer.sendSync('electron-store-get', key);
         },
-        set(key: StoreKeys, ...val: any[]) {
+        set(key: StoreKeys, val: any) {
             ipcRenderer.send('electron-store-set', key, val);
         },
         delete(key: StoreKeys) {

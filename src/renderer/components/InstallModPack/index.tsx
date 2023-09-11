@@ -1,48 +1,31 @@
 import './style.scss';
-import { useEffect, useState } from 'react';
+import { useContext } from 'react';
 import { Download } from 'react-bootstrap-icons';
-import downloadModpack from 'renderer/utils/downloadModpack';
 import Loader from '../Loader';
+import McInstanceContext from 'renderer/utils/contexts/McInstanceContext';
 
-type InstallModPackProps = {
-    afterDownload: () => void;
-};
-
-const InstallModPack = ({ afterDownload }: InstallModPackProps) => {
-    const [downloadProgress, setDownloadProgress] = useState(false);
-
-    useEffect(() => {
-        window.electron.ipcRenderer.invoke('is-modpack-installed').then((result) => {
-            if (typeof result === 'boolean') {
-                if (result) {
-                    afterDownload();
-                }
-            }
-        });
-    }, []);
-
-    const installModpack = async () => {
-        setDownloadProgress(true);
-        var result = await downloadModpack();
-
-        if (result) {
-            afterDownload();
-        }
-
-        setDownloadProgress(false);
-    };
+const InstallModPack = () => {
+    const { installingModPack, installModPack, modPackInstalled } = useContext(McInstanceContext);
 
     return (
         <section className='install-modpack'>
-            {downloadProgress ? (
+            {installingModPack ? (
                 <>
                     <p>Téléchargement en cours...</p>
                     <Loader />
                 </>
+            ) : modPackInstalled() ? (
+                <>
+                    <p>Modpack déjà installé</p>
+                    <button className='primary install-modpack__download-btn' onClick={installModPack}>
+                        <Download className='icon icon--20px' />
+                        <p>Reinstaller le modpack</p>
+                    </button>
+                </>
             ) : (
                 <>
                     <p>Le modpack n'est pas encore installé !</p>
-                    <button className='primary install-modpack__download-btn' onClick={installModpack}>
+                    <button className='primary install-modpack__download-btn' onClick={installModPack}>
                         <Download className='icon icon--20px' />
                         <p>Installer le modpack</p>
                     </button>

@@ -5,6 +5,7 @@ import { isMsAuthToken } from '../types/MsAuthToken';
 import { copy } from 'fs-extra';
 import { Instance, init } from 'gmll';
 import { Dir } from 'gmll/objects/files';
+import { getModFile } from './curseForgeApi/curseforgeApiRequests';
 
 export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
     // Login to Microsoft account
@@ -67,45 +68,37 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         }
     });
 
-    // Download and install fabric
-    ipcMain.on('download-fabric', async (e) => {
-        await init();
-
-        let instance;
-
-        try {
-            e.reply('download-fabric', 'start');
-
-            instance = new Instance({ version: 'fabric-loader-0.14.21-1.19.2', name: 'create_france' });
-            await instance.install();
-            instance.save();
-
-            e.reply('download-fabric-reply', 'success');
-        } catch (err) {
-            console.log('error: ' + JSON.stringify(err));
-            e.reply('download-fabric-reply', 'error');
-            return;
-        }
-    });
-
     // Install modpack
-    ipcMain.on('install-modpack', async (e) => {
+    ipcMain.on('install-modpack', async (e, removeData) => {
         await init();
+
+        if (typeof removeData !== 'boolean') {
+            removeData = false;
+        }
+
+        if (Instance.getProfiles().has('create_france')) {
+            if (removeData) {
+                Instance.rm('create_france');
+            } else {
+                // TODO: Save data
+            }
+        }
 
         const minecraftDir = new Dir('.minecraft').mkdir();
 
         const modpackZip = minecraftDir.getFile('modpack.zip');
 
-        // Download modpack
+        // Download launcher zip
         try {
             e.reply('download-modpack-reply', 'start');
 
-            await modpackZip.download('https://www.curseforge.com/api/v1/mods/888396/files/4679190/download');
+            await modpackZip.download(`https://api.pcloud.com/getpubzip?code=kZiqa3VZVWL2eQUS2VXBwu2YvgCNgubmKTIX`);
 
             e.reply('download-modpack-reply', 'success');
         } catch (err) {
             console.log('error: ' + JSON.stringify(err));
             e.reply('download-modpack-reply', 'error');
+            Instance.rm('create_france');
             return;
         }
 
@@ -117,8 +110,9 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         try {
             e.reply('extract-modpack-reply', 'start');
 
-            modpackExtractedFolder = minecraftDir.getDir('modpack-extracted').mkdir();
-            await modpackZip.unzip(modpackExtractedFolder);
+            const tempModpack = minecraftDir.getDir('modpack-extracted').mkdir();
+            await modpackZip.unzip(tempModpack);
+            modpackExtractedFolder = tempModpack.getDir('Createfrance');
 
             manifest = JSON.parse(modpackExtractedFolder.getFile('manifest.json').read());
 
@@ -132,6 +126,7 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         } catch (err) {
             console.log('error: ' + JSON.stringify(err));
             e.reply('extract-modpack-reply', 'error');
+            Instance.rm('create_france');
             return;
         }
 
@@ -141,7 +136,7 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         try {
             e.reply('download-fabric-reply', 'start');
 
-            instance = new Instance({ version: mcVersion, name: 'create_france' });
+            instance = new Instance({ version: mcVersion, name: 'create_france', ram: 16 });
             await instance.install();
             instance.save();
 
@@ -149,6 +144,7 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         } catch (err) {
             console.log('error: ' + JSON.stringify(err));
             e.reply('download-fabric-reply', 'error');
+            Instance.rm('create_france');
             return;
         }
 
@@ -178,12 +174,30 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
 
             let i = 1;
             for (let mod of mods) {
-                const name = `${mod.projectID}-${mod.fileID}.jar`;
-                const downloadUrl = `https://www.curseforge.com/api/v1/mods/${mod.projectID}/files/${mod.fileID}/download`;
+                const modFile = await getModFile(mod.projectID, mod.fileID);
 
-                await instanceModsFolder.getFile(name).download(downloadUrl);
+                if (modFile === null) {
+                    console.log(`Error while downloading ${mod.projectID} | ${mod.fileID}`);
+                    continue;
+                }
 
-                console.log(`Downloaded ${name} | ${i}/${nbMods}`);
+                const name = modFile.data.fileName;
+
+                console.log(`Downloading... ${name}| ${i}/${nbMods}`);
+                let downloadUrl = `https://www.curseforge.com/api/v1/mods/${mod.projectID}/files/${mod.fileID}/download`;
+
+                if (modFile.data.downloadUrl !== null) {
+                    downloadUrl = modFile.data.downloadUrl;
+                }
+
+                await instanceModsFolder
+                    .getFile(name)
+                    .download(downloadUrl)
+                    .catch((err) => {
+                        console.log(`Error while downloading ${name} (${mod.projectID}-${mod.fileID})`);
+                        console.log(err);
+                    });
+
                 i++;
             }
 
@@ -191,8 +205,11 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         } catch (err) {
             console.log('error: ' + JSON.stringify(err));
             e.reply('install-modpack-reply', 'error');
+            Instance.rm('create_france');
             return;
         }
+
+        e.reply('modpack-installation', JSON.stringify(instance));
     });
 
     // Play Minecraft
@@ -268,13 +285,57 @@ export function setIPCMainHandlers(ipcMain: IpcMain) {
         return JSON.stringify(Instance.get('create_france'));
     });
 
-    ipcMain.handle('is-modpack-installed', async (_) => {
+    // Delete Minecraft instance
+    ipcMain.handle('delete-minecraft-instance', async (_) => {
         await init();
 
-        if (Instance.getProfiles().has('create_france')) {
-            return true;
-        } else {
+        if (!Instance.getProfiles().has('create_france')) {
             return false;
         }
+
+        try {
+            Instance.rm('create_france');
+        } catch (err) {
+            console.log(err);
+
+            return false;
+        }
+
+        return true;
     });
+
+    // Save Minecraft instance
+    ipcMain.handle('save-minecraft-instance', async (_, newRam, newJavaPath) => {
+        await init();
+
+        if (!Instance.getProfiles().has('create_france')) {
+            console.log('Try to save instance but it does not exist');
+            return false;
+        }
+
+        try {
+            const instance = Instance.get('create_france');
+
+            if (typeof newRam === 'number') {
+                instance.ram = newRam;
+            }
+
+            if (typeof newJavaPath === 'string') {
+                instance.javaPath = newJavaPath;
+            }
+
+            console.log(JSON.stringify(instance));
+
+            instance.save();
+        } catch (err) {
+            console.log(err);
+
+            return false;
+        }
+
+        return true;
+    });
+
+    // Test
+    ipcMain.handle('test', async (_) => {});
 }

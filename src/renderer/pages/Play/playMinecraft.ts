@@ -1,23 +1,4 @@
 import { Id, toast } from 'react-toastify';
-import downloadModpack from '../../utils/downloadModpack';
-
-const playMinecraft = () => {
-    window.electron.ipcRenderer.removeAllListeners('play-minecraft-reply');
-    window.electron.ipcRenderer.removeAllListeners('is-modpack-installed-reply');
-
-    // Check if modpack is installed
-    window.electron.ipcRenderer.once('is-modpack-installed-reply', async (_, installed) => {
-        if (installed === 'false') {
-            if (!(await downloadModpack())) {
-                return;
-            }
-        }
-
-        launchMinecraft();
-    });
-
-    window.electron.ipcRenderer.sendMessage('is-modpack-installed');
-};
 
 const launchMinecraft = () => {
     window.electron.ipcRenderer.removeAllListeners('play-minecraft-reply');
@@ -47,4 +28,4 @@ const setListeners = (notifId: Id) => {
     });
 };
 
-export default playMinecraft;
+export default launchMinecraft;

@@ -31,18 +31,17 @@
             background-size: auto 90%;
             background-repeat: no-repeat;
             background-position: center;
-            transform: rotate(45deg);
 
             &:hover {
-                animation: infinite 2s linear rotate;
+                animation: infinite 5s linear rotate;
 
                 @keyframes rotate {
-                    0% {
-                        transform: rotate(45deg);
+                    from {
+                        transform: rotate(0deg);
                     }
 
-                    100% {
-                        transform: rotate(405deg);
+                    to {
+                        transform: rotate(360deg);
                     }
                 }
             }

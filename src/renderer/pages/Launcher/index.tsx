@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useEffect } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import Settings from '../Settings';
+import { McInstanceContextProvider } from 'renderer/utils/contexts/McInstanceContext';
 
 const Launcher = () => {
     const navigate = useNavigate();
@@ -23,7 +24,7 @@ const Launcher = () => {
     const account = window.electron.store.get('account');
 
     let headUrl = 'https://mc-heads.net/avatar/MHF_Steve/64';
-    let username = 'undefined';
+    let username = 'Steve';
 
     if (isGmllUser(account)) {
         username = account.profile.name;
@@ -36,22 +37,24 @@ const Launcher = () => {
 
     return (
         <div className='launcher'>
-            <section className='launcher__sidebar'>
-                <img id='minecraft-player-head' src={headUrl} />
-                <p>{username}</p>
-                <hr className='horizontal-divider' />
-                <p className='font-14 clickable' onClick={handleLogout}>
-                    Se déconnecter
-                </p>
-                <div className='launcher__sidebar__end'></div>
-                <button className='image-button launcher__sidebar__settings-btn' onClick={() => navigate('/settings')} />
-            </section>
-            <section className='launcher__main'>
-                <Routes>
-                    <Route path='/' element={<Play />} />
-                    <Route path='/settings' element={<Settings />} />
-                </Routes>
-            </section>
+            <McInstanceContextProvider>
+                <section className='launcher__sidebar'>
+                    <img id='minecraft-player-head' src={headUrl} />
+                    <p>{username}</p>
+                    <hr className='horizontal-divider' />
+                    <p className='font-14 clickable' onClick={handleLogout}>
+                        Se déconnecter
+                    </p>
+                    <div className='launcher__sidebar__end'></div>
+                    <button className='image-button launcher__sidebar__settings-btn' onClick={() => navigate('/settings')} />
+                </section>
+                <section className='launcher__main'>
+                    <Routes>
+                        <Route path='/' element={<Play />} />
+                        <Route path='/settings' element={<Settings />} />
+                    </Routes>
+                </section>
+            </McInstanceContextProvider>
         </div>
     );
 };

@@ -19,6 +19,7 @@ const Auth = () => {
 
         if (!isMsAuthToken(msToken)) {
             console.log('account-token is not a MsAuthToken');
+            console.log(msToken);
             return false;
         }
 

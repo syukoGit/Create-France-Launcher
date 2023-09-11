@@ -1,9 +1,13 @@
 import { isGmllUser } from 'types/GmllUser';
 import MinecraftCreateFrance from '../../../../assets/create-france/minecraft-create-france.png';
 import './style.scss';
-import playMinecraft from './playMinecraft';
+import launchMinecraft from './playMinecraft';
+import { useContext } from 'react';
+import McInstanceContext from 'renderer/utils/contexts/McInstanceContext';
 
 const Play = () => {
+    const { modPackInstalled, installModPack } = useContext(McInstanceContext);
+
     const account = window.electron.store.get('account');
 
     let headUrl = 'https://mc-heads.net/avatar/MHF_Steve/64';
@@ -14,8 +18,12 @@ const Play = () => {
         headUrl = `https://mc-heads.net/avatar/${username}/64`;
     }
 
-    const handlePlay = () => {
-        playMinecraft();
+    const handlePlay = async () => {
+        if (!modPackInstalled()) {
+            await installModPack();
+        }
+
+        launchMinecraft();
     };
 
     return (

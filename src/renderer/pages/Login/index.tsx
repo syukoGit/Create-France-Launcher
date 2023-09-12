@@ -9,14 +9,14 @@ import { useEffect } from 'react';
 const Login = () => {
     const navigate = useNavigate();
 
-    useEffect(() => {
-        window.electron.ipcRenderer.once('login-reply', (_, success, username) => {
-            if (success) {
-                toast.success(`Bonjour ${username} !`);
-                navigate('/');
-            }
-        });
-    }, []);
+    const loginSuccess = (username: string) => {
+        toast.success(`Bonjour ${username} !`);
+        navigate('/');
+    };
+
+    const loginFailed = () => {
+        toast.error('Impossible de se connecter. Veuillez réessayer.');
+    };
 
     return (
         <div className='login-page'>
@@ -29,7 +29,7 @@ const Login = () => {
                 <div className='login-page__content__form'>
                     <h1 className='login-page__content__form__title'>Se connecter</h1>
                     <div>
-                        <SigninWithMicrosoft />
+                        <SigninWithMicrosoft loginSuccess={loginSuccess} loginFailed={loginFailed} />
                     </div>
                 </div>
             </div>

@@ -3,7 +3,7 @@ import getModFileResponse, { isGetModFileResponse } from './types/getModFileResp
 
 const baseUrl = 'https://api.curseforge.com';
 
-const apiKey = '';
+const apiKey = '$2a$10$8sGXLAOKwN..n6s/QeILR.R4p1xrzeARHMUKyir4Ua8vAdTc6WVN6';
 
 export async function getModFile(projectId: number, fileId: number): Promise<getModFileResponse | null> {
     const url = `${baseUrl}/v1/mods/${projectId}/files/${fileId}`;

@@ -2,10 +2,11 @@ import { BrowserWindow, IpcMain } from 'electron';
 import { Auth, Minecraft } from 'msmc';
 import AppStore from './electronStore';
 import { isMsAuthToken } from '../types/MsAuthToken';
-import { copy } from 'fs-extra';
+import { copy, exists, existsSync } from 'fs-extra';
 import { Instance, init } from 'gmll';
 import { Dir } from 'gmll/objects/files';
 import { getModFile } from './curseForgeApi/curseforgeApiRequests';
+import { rmdir, unlink } from 'fs/promises';
 
 export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
     // Login to Microsoft account
@@ -72,19 +73,55 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
     ipcMain.on('install-modpack', async (e, removeData) => {
         await init();
 
-        if (typeof removeData !== 'boolean') {
-            removeData = false;
-        }
+        Instance.getProfiles().forEach((instance) => {
+            console.log(instance.name);
+        });
 
         if (Instance.getProfiles().has('create_france')) {
-            if (removeData) {
+            try {
+                console.log('Deleting instance...');
+                const instance = Instance.get('create_france');
+                const instancePath = instance.getDir().path.join('\\');
+
                 Instance.rm('create_france');
-            } else {
-                // TODO: Save data
+                console.log('Instance removed from GMLL');
+
+                await rmdir(instancePath, { recursive: true }).catch((err) => {
+                    console.log('Error while deleting instance folder');
+                    console.log(err);
+                });
+
+                console.log('Instance deleted');
+            } catch (err) {
+                console.log('Error while deleting instance');
+                console.log(err);
             }
+        } else {
+            console.log('Instance does not exist');
         }
 
         const minecraftDir = new Dir('.minecraft').mkdir();
+        const minecraftDirPath = minecraftDir.path.join('\\');
+
+        // Delete old modpack files
+        try {
+            if (existsSync(minecraftDirPath + '\\modpack.zip')) {
+                await unlink(minecraftDirPath + '\\modpack.zip').catch((err) => {
+                    console.log('Error while deleting modpack.zip');
+                    console.log(err);
+                });
+            }
+
+            if (existsSync(minecraftDirPath + '\\modpack-extracted')) {
+                await rmdir(minecraftDirPath + '\\modpack-extracted', { recursive: true }).catch((err) => {
+                    console.log('Error while deleting modpack-extracted folder');
+                    console.log(err);
+                });
+            }
+        } catch (err) {
+            console.log('Error while deleting old modpack files');
+            console.log(err);
+        }
 
         const modpackZip = minecraftDir.getFile('modpack.zip');
 
@@ -136,7 +173,7 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         try {
             e.reply('download-fabric-reply', 'start');
 
-            instance = new Instance({ version: mcVersion, name: 'create_france', ram: 16 });
+            instance = new Instance({ version: mcVersion, name: 'create_france', ram: 16, detach: true });
             await instance.install();
             instance.save();
 
@@ -183,12 +220,22 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
 
                 const name = modFile.data.fileName;
 
+                if (instanceModsFolder.getFile(name).exists()) {
+                    console.log(`${name} already exists`);
+                    i++;
+                    continue;
+                }
+
                 console.log(`Downloading... ${name}| ${i}/${nbMods}`);
                 let downloadUrl = `https://www.curseforge.com/api/v1/mods/${mod.projectID}/files/${mod.fileID}/download`;
 
                 if (modFile.data.downloadUrl !== null) {
                     downloadUrl = modFile.data.downloadUrl;
+                } else {
+                    console.log(`No api download url for ${name}. Used default url`);
                 }
+
+                let errorForThisFile = false;
 
                 await instanceModsFolder
                     .getFile(name)
@@ -196,7 +243,12 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
                     .catch((err) => {
                         console.log(`Error while downloading ${name} (${mod.projectID}-${mod.fileID})`);
                         console.log(err);
+                        errorForThisFile = true;
                     });
+
+                if (errorForThisFile) {
+                    instanceModsFolder.getFile(name).rm();
+                }
 
                 i++;
             }
@@ -208,6 +260,28 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
             Instance.rm('create_france');
             return;
         }
+
+        // Delete temp files
+        try {
+            if (existsSync(minecraftDirPath + '\\modpack.zip')) {
+                await unlink(minecraftDirPath + '\\modpack.zip').catch((err) => {
+                    console.log('Error while deleting modpack.zip');
+                    console.log(err);
+                });
+            }
+
+            if (existsSync(minecraftDirPath + '\\modpack-extracted')) {
+                await rmdir(minecraftDirPath + '\\modpack-extracted', { recursive: true }).catch((err) => {
+                    console.log('Error while deleting modpack-extracted folder');
+                    console.log(err);
+                });
+            }
+        } catch (err) {
+            console.log('Error while deleting modpack temp files');
+            console.log(err);
+        }
+
+        console.log('Modpack installed');
 
         e.reply('modpack-installation', JSON.stringify(instance));
     });
@@ -246,8 +320,16 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         }
 
         try {
+            const settings = store.get('settings') as any;
+
+            const resolution: { width: string; height: string } = { width: '720', height: '480' };
+            if (settings !== null && settings?.resolution !== undefined) {
+                resolution.width = settings?.resolution?.width ?? 720;
+                resolution.height = settings?.resolution?.height ?? 480;
+            }
+
             var int = Instance.get('create_france');
-            await int.launch(mc.gmll());
+            await int.launch(mc.gmll(), resolution);
 
             setTimeout(() => BrowserWindow.getFocusedWindow()?.minimize(), 6000);
 
@@ -273,7 +355,7 @@ export function setIPCMainListeners(ipcMain: IpcMain, store: AppStore) {
         store.delete(key);
     });
 }
-export function setIPCMainHandlers(ipcMain: IpcMain) {
+export function setIPCMainHandlers(ipcMain: IpcMain, store: AppStore) {
     // Get Minecraft instance
     ipcMain.handle('get-minecraft-instance', async (_) => {
         await init();
@@ -338,4 +420,25 @@ export function setIPCMainHandlers(ipcMain: IpcMain) {
 
     // Test
     ipcMain.handle('test', async (_) => {});
+
+    // Try to connect with Microsoft account
+    ipcMain.handle('ms-account-login', async (_) => {
+        try {
+            const auth = new Auth('select_account');
+            const xbox = await auth.launch('electron');
+            const mc = await xbox.getMinecraft();
+            const account = mc.gmll();
+
+            store.storeAccountInfo(xbox.msToken, account);
+
+            console.log(account);
+
+            return account.profile.name;
+        } catch (err) {
+            store.removeAccountInfo();
+            console.log('Error while connecting with Microsoft account: ' + JSON.stringify(err));
+
+            return null;
+        }
+    });
 }

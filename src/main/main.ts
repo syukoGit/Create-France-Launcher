@@ -104,4 +104,4 @@ app.whenReady()
     .catch(console.log);
 
 setIPCMainListeners(ipcMain, store);
-setIPCMainHandlers(ipcMain);
+setIPCMainHandlers(ipcMain, store);

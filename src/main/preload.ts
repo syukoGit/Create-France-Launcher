@@ -15,7 +15,7 @@ type IpcRendererChannelsModpack =
     | 'extract-modpack-reply'
     | 'is-modpack-installed-reply';
 
-type IpcRendererChannelsInvoke = 'get-minecraft-instance' | 'delete-minecraft-instance' | 'save-minecraft-instance' | 'test';
+type IpcRendererChannelsInvoke = 'get-minecraft-instance' | 'delete-minecraft-instance' | 'save-minecraft-instance' | 'ms-account-login' | 'test';
 
 const electronHandler = {
     ipcRenderer: {

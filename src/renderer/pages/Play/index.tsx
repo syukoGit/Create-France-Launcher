@@ -4,9 +4,10 @@ import './style.scss';
 import launchMinecraft from './playMinecraft';
 import { useContext } from 'react';
 import McInstanceContext from 'renderer/utils/contexts/McInstanceContext';
+import { toast } from 'react-toastify';
 
 const Play = () => {
-    const { modPackInstalled, installModPack } = useContext(McInstanceContext);
+    const { installingModPack, modPackInstalled, installModPack } = useContext(McInstanceContext);
 
     const account = window.electron.store.get('account');
 
@@ -19,6 +20,11 @@ const Play = () => {
     }
 
     const handlePlay = async () => {
+        if (installingModPack) {
+            toast.error("Le modpack est en cours d'installation. Veuillez patienter.");
+            return;
+        }
+
         if (!modPackInstalled()) {
             await installModPack();
         }

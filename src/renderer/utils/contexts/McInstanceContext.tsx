@@ -67,7 +67,6 @@ export const McInstanceContextProvider = ({ children }: Props) => {
         }
 
         setInstallingModPack(true);
-        await window.electron.ipcRenderer.invoke('delete-minecraft-instance');
 
         await downloadModpack()
             .catch(() => {
